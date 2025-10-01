@@ -5,14 +5,19 @@
 **Current GitHub Personal Access Token expires: October 30, 2025**
 
 ### 📋 **Token Details:**
-- **Created**: October 1, 2025
+- **Created**: October 1, 2025 (Updated with Contents permission)
 - **Expires**: October 30, 2025 (30 days)
 - **Permissions**: 
   - Actions: Read and write
   - Workflows: Read and write
+  - Contents: Read and write ← **ADDED for push access**
   - Repositories: Full access
   - Administration: Read-only
   - Other permissions: Read-only
+
+### 🔄 **Token Update History:**
+- **Initial Token**: Missing Contents permission (resolved)
+- **Updated Token**: Added Contents: Write permission for repository push access
 
 ### 🔄 **Renewal Required:**
 **Before October 30, 2025**, you will need to:
