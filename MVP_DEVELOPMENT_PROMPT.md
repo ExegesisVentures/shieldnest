@@ -68,7 +68,26 @@ But for now, **use the MVP FOCUS MODE prompt** for all your requests!
 **🎯 Your MVP Development Prompt:**
 
 ```
-🎯 MVP FOCUS MODE: I am currently working on the MVP version only. Please work ONLY on the mvp-production branch, use the mvp_production database schema, focus on MVP features only, make changes directly for MVP deployment, and commit changes to mvp-production branch.
+🎯 MVP FOCUS MODE: I am currently working on the MVP version only. Please work ONLY on the mvp-production branch, use the mvp_production database schema, focus on MVP features only, make changes directly for MVP deployment, and commit changes to mvp-production branch. Note: I'm using the branch workflow manager to safely switch between MVP and development work.
 ```
 
 **Copy this and paste it before each request!** 🚀
+
+---
+
+## 🔄 **Workflow Commands:**
+
+**Before starting MVP work:**
+```bash
+./scripts/branch-workflow-manager.sh start-mvp
+```
+
+**When done with MVP (to return to full development):**
+```bash
+./scripts/branch-workflow-manager.sh back-to-dev
+```
+
+**Deploy MVP:**
+```bash
+./scripts/branch-workflow-manager.sh deploy-mvp
+```
