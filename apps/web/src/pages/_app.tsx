@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { WalletProvider } from '@/contexts/WalletProvider';
 import { WalletModalProvider } from '@/contexts/WalletModalContext';
-import Layout from '@/components/Layout';
+import Layout from '@/components/LayoutMVP';
 import HMRErrorSuppressor from '@/components/HMRErrorSuppressor';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
