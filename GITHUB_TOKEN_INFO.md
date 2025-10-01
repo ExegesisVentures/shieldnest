@@ -17,7 +17,8 @@
 
 ### 🔄 **Token Update History:**
 - **Initial Token**: Missing Contents permission (resolved)
-- **Updated Token**: Added Contents: Write permission for repository push access
+- **Second Token**: Still missing write permissions (resolved)
+- **Final Token**: Full `repo` scope with complete repository access ✅
 
 ### 🔄 **Renewal Required:**
 **Before October 30, 2025**, you will need to:
