@@ -89,6 +89,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkSession = async () => {
     try {
+      // MVP Mode: Skip API calls for UI development
+      if (process.env.NEXT_PUBLIC_APP_ENV === 'mvp') {
+        setIsLoading(false);
+        return;
+      }
+
       // Check if we have a valid JWT token
       const token = localStorage.getItem('auth_token');
       if (token) {
@@ -412,6 +418,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
+      // MVP Mode: Skip API calls for UI development
+      if (process.env.NEXT_PUBLIC_APP_ENV === 'mvp') {
+        return;
+      }
+
       const token = localStorage.getItem('auth_token');
       if (!token) return;
 
