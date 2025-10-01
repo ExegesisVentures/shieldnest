@@ -1,0 +1,492 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User management
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  firstName String?
+  lastName  String?
+  avatarUrl String?
+  
+  // Supabase integration
+  supabaseId String? @unique // Links to Supabase auth.users.id
+  
+  // Profile preferences
+  profileSettings Json? // JSON object for user preferences
+  
+  // Authentication metadata
+  emailVerified Boolean @default(false)
+  lastLoginAt  DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  wallets     Wallet[]
+  tmaConsents TMAConsent[]
+  pmaConsents PMAConsent[]
+  claims      Claim[]
+  sellbacks   Sellback[]
+  rewardClaims RewardClaim[]
+  stakingTrackedWallets StakingTrackedWallet[]
+  stakingClaims StakingClaim[]
+  riseConversions RiseConversion[]
+  userWallets UserWallet[] // Many-to-many relationship for email users
+
+  @@map("users")
+}
+
+// Many-to-many relationship between users and wallet addresses
+// This allows email users to have multiple associated wallets for read-only access
+model UserWallet {
+  id        String   @id @default(uuid())
+  userId    String
+  address   String   // Wallet address (read-only for email users)
+  chain     String   @default("coreum")
+  label     String?  // User-defined label for this wallet
+  isDefault Boolean  @default(false) // Primary wallet for portfolio display
+  addedAt   DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, address, chain])
+  @@map("user_wallets")
+}
+
+model Wallet {
+  id         String   @id @default(uuid())
+  userId     String
+  chain      String   @default("coreum")
+  address    String
+  verifiedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tmaConsents TMAConsent[]
+  claims      Claim[]
+  sellbacks   Sellback[]
+  rewardClaims RewardClaim[]
+  riseConversions RiseConversion[]
+
+  @@unique([address, chain])
+  @@map("wallets")
+}
+
+// TMA (Terms & Membership Agreement) management
+model TMA {
+  id        String   @id @default(uuid())
+  version   String   @unique
+  hash      String   @unique
+  body      String   // Full TMA document text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Relations
+  consents TMAConsent[]
+
+  @@map("tma_documents")
+}
+
+model TMAConsent {
+  id         String   @id @default(uuid())
+  userId     String
+  walletId   String
+  tmaId      String
+  version    String   // Denormalized for quick access
+  signature  String   // ADR-036 signature
+  messageHash String  // Hash of the signed message
+  timestamp  DateTime @default(now())
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  tma    TMA    @relation(fields: [tmaId], references: [id])
+
+  @@unique([userId, walletId, version])
+  @@map("tma_consents")
+}
+
+// Private Membership Agreement (PMA) management
+model PMA {
+  id        String   @id @default(uuid())
+  version   String   @unique
+  title     String
+  content   String   // Full PMA document content
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Relations
+  consents PMAConsent[]
+
+  @@map("pma_documents")
+}
+
+model PMAConsent {
+  id         String   @id @default(uuid())
+  userId     String
+  pmaId      String
+  version    String   // Denormalized for quick access
+  signature  String?  // Digital signature if applicable
+  ipAddress  String?  // IP address for legal purposes
+  userAgent  String?  // Browser info for legal purposes
+  timestamp  DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pma  PMA  @relation(fields: [pmaId], references: [id])
+
+  @@unique([userId, version])
+  @@map("pma_consents")
+}
+
+// Rise NFT snapshot for OG conversion eligibility
+model SnapshotEntry {
+  id           String   @id @default(uuid())
+  address      String
+  tokenIds     String[] // Array of token IDs owned
+  merkleProof  String[] // Merkle proof for verification
+  snapshotHeight BigInt
+  createdAt    DateTime @default(now())
+
+  @@unique([address, snapshotHeight])
+  @@map("snapshot_entries")
+}
+
+// Manual tracking of Rise NFT holders (admin managed)
+model RiseNFTHolder {
+  id               String   @id @default(uuid())
+  walletAddress    String   @unique
+  originalCount    Int      // Original number of Rise NFTs held
+  remainingCount   Int      // Remaining NFTs (decreases with conversions)
+  addedBy          String   // Admin who added this entry
+  notes            String?  // Optional notes about the holder
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  conversions RiseConversion[]
+
+  @@map("rise_nft_holders")
+}
+
+// Track individual Rise NFT conversions
+model RiseConversion {
+  id               String   @id @default(uuid())
+  riseHolderId     String
+  walletAddress    String   // For quick lookup
+  userId           String?  // User who performed conversion (if authenticated)
+  walletId         String?  // Wallet used for conversion
+  rollTokenId      String?  // ShieldNest NFT token ID minted
+  txHash           String?  // Transaction hash of the mint
+  status           ConversionStatus @default(PENDING)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  riseHolder RiseNFTHolder @relation(fields: [riseHolderId], references: [id], onDelete: Cascade)
+  user       User?         @relation(fields: [userId], references: [id])
+  wallet     Wallet?       @relation(fields: [walletId], references: [id])
+
+  @@map("rise_conversions")
+}
+
+enum ConversionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// NFT claims (both conversion and public mint)
+model Claim {
+  id         String    @id @default(uuid())
+  userId     String
+  walletId   String
+  type       ClaimType
+  tokenId    String?   // ShieldNest NFT token ID after successful mint
+  txHash     String?   // Transaction hash of the mint
+  status     ClaimStatus @default(PENDING)
+  metadata   Json?     // Additional claim-specific data
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@map("claims")
+}
+
+enum ClaimType {
+  CONVERSION  // Rise → ShieldNest OG conversion
+  PUBLIC      // New user public mint
+}
+
+enum ClaimStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// Sellback management
+model Sellback {
+  id             String        @id @default(uuid())
+  tokenId        String
+  sellerId       String
+  sellerWalletId String
+  priceUsd       Decimal       @db.Decimal(12, 2)
+  oraclePrice    Decimal       @db.Decimal(18, 8) // COREUM/USD at time of initiation
+  coreumAmount   Decimal       @db.Decimal(18, 6) // Locked COREUM amount
+  oracleTxHash   String?       // Oracle price verification tx
+  initTxHash     String?       // Sellback initiation tx
+  finalizeTxHash String?       // Finalization tx
+  initTs         DateTime      @default(now())
+  unlockTs       DateTime      // When staking unlocks
+  status         SellbackStatus @default(INITIATED)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  seller       User   @relation(fields: [sellerId], references: [id])
+  sellerWallet Wallet @relation(fields: [sellerWalletId], references: [id])
+
+  @@map("sellbacks")
+}
+
+enum SellbackStatus {
+  INITIATED   // NFT escrowed, COREUM locked in staking
+  STAKING     // Tokens are staking/time-locked
+  CLAIMABLE   // Ready for seller to claim
+  CLAIMED     // Seller has claimed tokens
+  CANCELLED   // Sellback cancelled (refund scenario)
+}
+
+// Reward epoch management
+model Epoch {
+  id         String   @id @default(uuid())
+  number     Int      @unique
+  startTs    DateTime
+  endTs      DateTime
+  poolAmount Decimal  @db.Decimal(18, 6) // Total LP fees for this epoch
+  totalNFTs  Int      // Total ShieldNest NFTs at epoch end
+  finalized  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  rewardClaims RewardClaim[]
+
+  @@map("epochs")
+}
+
+model RewardClaim {
+  id       String  @id @default(uuid())
+  epochId  String
+  walletId String
+  userId   String
+  nftCount Int     // Number of NFTs held during this epoch
+  amount   Decimal @db.Decimal(18, 6) // Claimable amount
+  txHash   String? // Claim transaction hash
+  claimed  Boolean @default(false)
+  claimedAt DateTime?
+
+  // Relations
+  epoch  Epoch  @relation(fields: [epochId], references: [id])
+  wallet Wallet @relation(fields: [walletId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([epochId, walletId])
+  @@map("reward_claims")
+}
+
+// Airdrop management
+model AirdropSchedule {
+  id         String      @id @default(uuid())
+  name       String
+  type       AirdropType
+  merkleRoot String
+  tokenAddress String?   // For token airdrops
+  nftContract String?    // For NFT airdrops
+  startTs    DateTime
+  endTs      DateTime
+  isActive   Boolean     @default(true)
+  metadata   Json?       // Additional airdrop configuration
+  createdAt  DateTime    @default(now())
+
+  // Relations
+  claims AirdropClaim[]
+
+  @@map("airdrop_schedules")
+}
+
+enum AirdropType {
+  TOKEN
+  NFT
+  COREUM
+}
+
+model AirdropClaim {
+  id           String    @id @default(uuid())
+  scheduleId   String
+  walletAddress String
+  amount       Decimal?  @db.Decimal(18, 6) // For token/COREUM airdrops
+  tokenId      String?   // For NFT airdrops
+  merkleProof  String[]  // Proof for claim verification
+  txHash       String?   // Claim transaction hash
+  claimed      Boolean   @default(false)
+  claimedAt    DateTime?
+
+  // Relations
+  schedule AirdropSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@unique([scheduleId, walletAddress])
+  @@map("airdrop_claims")
+}
+
+// Configuration management
+model Config {
+  key       String   @id
+  value     String
+  type      ConfigType @default(STRING)
+  updatedAt DateTime @updatedAt
+  updatedBy String?  // Admin user who made the change
+
+  @@map("config")
+}
+
+enum ConfigType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+// Blockchain indexing
+model BlockchainEvent {
+  id          String    @id @default(uuid())
+  chain       String    @default("coreum")
+  blockHeight BigInt
+  txHash      String
+  eventType   String    // "mint", "burn", "transfer", "sellback_init", etc.
+  contractAddress String
+  eventData   Json      // Raw event data
+  processed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@unique([txHash, eventType, contractAddress])
+  @@index([blockHeight])
+  @@index([eventType])
+  @@index([processed])
+  @@map("blockchain_events")
+}
+
+// Oracle price tracking
+model PriceOracle {
+  id        String   @id @default(uuid())
+  symbol    String   // "COREUM/USD"
+  price     Decimal  @db.Decimal(18, 8)
+  source    String   // "binance", "coinbase", etc.
+  timestamp DateTime
+  signature String?  // Backend signature for verification
+  isActive  Boolean  @default(true)
+
+  @@index([symbol, timestamp])
+  @@map("price_oracles")
+}
+
+// Token metadata registry for dynamic token information
+model TokenMetadata {
+  id          String   @id @default(uuid())
+  denom       String   @unique // Token denomination (e.g., "ucore", "factory/...", "xrpl11f82115a5-...")
+  symbol      String   // Clean ticker (e.g., "CORE", "ROLL")
+  name        String   // Full name (e.g., "Coreum", "Roll Token")
+  decimals    Int      @default(6)
+  imageUrl    String?  // Token logo URL (local path or external URL)
+  imageData   Bytes?   // Optional: Store image data directly in DB for caching
+  description String?  // Brief description
+  website     String?  // Official website
+  isNative    Boolean  @default(false)
+  category    String   @default("fungible") // "native", "fungible", "nft", "other"
+  
+  // Metadata and caching
+  verified    Boolean  @default(false) // Is this token verified/official?
+  priority    Int      @default(0)     // Display priority (higher = more important)
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // External data sources
+  explorerUrl String?  // Link to blockchain explorer
+  sourceHash  String?  // Hash of source data for cache invalidation
+  
+  @@index([symbol])
+  @@index([category])
+  @@index([verified, priority])
+  @@map("token_metadata")
+}
+
+// Staking rewards tracking (members-only)
+model StakingTrackedWallet {
+  id        String   @id @default(uuid())
+  userId    String
+  address   String
+  chain     String   @default("coreum")
+  startDate DateTime
+  investedUsd Decimal? @db.Decimal(18, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totals StakingWalletTotal?
+  claims StakingClaim[]
+
+  @@unique([address, chain])
+  @@map("staking_tracked_wallets")
+}
+
+model StakingWalletTotal {
+  id                  String   @id @default(uuid())
+  trackedWalletId     String   @unique
+  totalClaimed        Decimal  @db.Decimal(18, 6) @default(0)
+  currentClaimable    Decimal  @db.Decimal(18, 6) @default(0)
+  lastClaimAt         DateTime?
+  lastClaimableUpdate DateTime @default(now())
+
+  // Relations
+  trackedWallet StakingTrackedWallet @relation(fields: [trackedWalletId], references: [id], onDelete: Cascade)
+
+  @@map("staking_wallet_totals")
+}
+
+model StakingClaim {
+  id               String   @id @default(uuid())
+  trackedWalletId  String
+  userId           String
+  amount           Decimal  @db.Decimal(18, 6)
+  txHash           String?
+  autoCompounded   Boolean  @default(false)
+  claimedAt        DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  // Relations
+  trackedWallet StakingTrackedWallet @relation(fields: [trackedWalletId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([trackedWalletId, claimedAt])
+  @@map("staking_claims")
+}

@@ -1,0 +1,39 @@
+{
+  "name": "shieldnest-nft-dashboard",
+  "version": "1.0.0",
+  "description": "Production-ready ShieldNest NFT Dashboard for Coreum blockchain",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "contracts/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "db:generate": "cd apps/api && pnpm db:generate",
+    "db:migrate": "cd apps/api && pnpm db:migrate",
+    "db:seed": "cd apps/api && pnpm db:seed",
+    "api:dev": "cd apps/api && pnpm dev",
+    "web:dev": "cd apps/web && pnpm dev",
+    "contracts:build": "cd contracts && pnpm build",
+    "contracts:test": "cd contracts && pnpm test"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.33.1",
+    "@types/node": "^20.5.0",
+    "turbo": "^1.10.12",
+    "typescript": "^5.1.6"
+  },
+  "packageManager": "pnpm@8.6.12",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}

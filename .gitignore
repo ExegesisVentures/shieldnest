@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.npm/
+
+# Production builds
+dist/
+build/
+.next/
+out/
+
+# Environment variables (CRITICAL: Never commit these)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+apps/web/.env
+apps/api/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Security-sensitive files
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Database
+*.sqlite
+*.db
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Misc
+.turbo/
+.vercel/

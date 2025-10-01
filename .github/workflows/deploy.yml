@@ -1,0 +1,295 @@
+name: Deploy Roll NFT Dashboard
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        run: |
+          pnpm audit --audit-level moderate
+          echo "✅ Security audit passed"
+
+      - name: Check for sensitive files
+        run: |
+          if find . -name "*.env" -not -path "./node_modules/*" | grep -q .; then
+            echo "❌ Found .env files in repository"
+            find . -name "*.env" -not -path "./node_modules/*"
+            exit 1
+          fi
+          echo "✅ No sensitive files found"
+
+  lint-and-type-check:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    needs: security-audit
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint API
+        run: |
+          cd apps/api
+          pnpm lint
+
+      - name: Lint Web
+        run: |
+          cd apps/web
+          pnpm lint
+
+      - name: Type check API
+        run: |
+          cd apps/api
+          pnpm type-check
+
+      - name: Type check Web
+        run: |
+          cd apps/web
+          pnpm type-check
+
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest
+    needs: [security-audit, lint-and-type-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build API
+        run: |
+          cd apps/api
+          pnpm build
+
+      - name: Build Web
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          cd apps/web
+          pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            apps/api/dist/
+            apps/web/.next/
+          retention-days: 1
+
+  setup-supabase-dev:
+    name: Setup Supabase Dev Branch
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run RLS Setup on Dev Branch
+        env:
+          SUPABASE_DEV_DB_URL: ${{ secrets.SUPABASE_DEV_DB_URL }}
+        run: |
+          echo "Running RLS setup on development branch..."
+          psql "$SUPABASE_DEV_DB_URL" -f supabase/rls_setup.sql
+          echo "✅ RLS policies applied to dev branch"
+
+      - name: Verify RLS Setup
+        env:
+          SUPABASE_DEV_DB_URL: ${{ secrets.SUPABASE_DEV_DB_URL }}
+        run: |
+          echo "Verifying RLS setup..."
+          psql "$SUPABASE_DEV_DB_URL" -c "SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;"
+          echo "✅ RLS verification completed"
+
+  deploy-api-staging:
+    name: Deploy API to Staging
+    runs-on: ubuntu-latest
+    needs: [build, setup-supabase-dev]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Deploy to Vercel (API)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_API_PROJECT_ID }}
+          working-directory: apps/api
+          vercel-args: '--env DATABASE_URL="${{ secrets.DATABASE_URL_DEV }}" --env SUPABASE_URL="${{ secrets.SUPABASE_URL_DEV }}" --env SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}"'
+
+  deploy-web-staging:
+    name: Deploy Web to Staging
+    runs-on: ubuntu-latest
+    needs: [build, deploy-api-staging]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Deploy to Vercel (Web)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+          working-directory: apps/web
+          vercel-args: '--env NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL_STAGING }}" --env NEXT_PUBLIC_SUPABASE_URL="${{ secrets.SUPABASE_URL_DEV }}" --env NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY_DEV }}"'
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Setup PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run RLS Setup on Production (Manual Approval Required)
+        env:
+          SUPABASE_PROD_DB_URL: ${{ secrets.SUPABASE_PROD_DB_URL }}
+        run: |
+          echo "⚠️ Running RLS setup on PRODUCTION database..."
+          echo "This requires manual approval and should be reviewed carefully."
+          psql "$SUPABASE_PROD_DB_URL" -f supabase/rls_setup.sql
+          echo "✅ RLS policies applied to production"
+
+      - name: Deploy API to Production
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_API_PROJECT_ID }}
+          working-directory: apps/api
+          vercel-args: '--prod --env DATABASE_URL="${{ secrets.DATABASE_URL_PROD }}" --env SUPABASE_URL="${{ secrets.SUPABASE_URL_PROD }}" --env SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PROD }}"'
+
+      - name: Deploy Web to Production
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+          working-directory: apps/web
+          vercel-args: '--prod --env NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL_PROD }}" --env NEXT_PUBLIC_SUPABASE_URL="${{ secrets.SUPABASE_URL_PROD }}" --env NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY_PROD }}"'
+
+  post-deploy-tests:
+    name: Post-Deployment Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-web-staging]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test API Health
+        run: |
+          echo "Testing API health endpoint..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.NEXT_PUBLIC_API_URL_STAGING }}/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ API health check passed"
+          else
+            echo "❌ API health check failed with status: $response"
+            exit 1
+          fi
+
+      - name: Test Web Application
+        run: |
+          echo "Testing web application..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.WEB_URL_STAGING }})
+          if [ $response -eq 200 ]; then
+            echo "✅ Web application health check passed"
+          else
+            echo "❌ Web application health check failed with status: $response"
+            exit 1
+          fi
+
+      - name: Test Database Connection
+        env:
+          SUPABASE_DEV_DB_URL: ${{ secrets.SUPABASE_DEV_DB_URL }}
+        run: |
+          echo "Testing database connection..."
+          psql "$SUPABASE_DEV_DB_URL" -c "SELECT 1;" > /dev/null
+          echo "✅ Database connection test passed"
