@@ -10,6 +10,9 @@ export interface AuthenticatedRequest extends NextApiRequest {
 export interface JwtPayload {
   userId: string;
   walletId?: string;
+  email?: string;
+  supabaseId?: string;
+  purpose: string;
   iat: number;
   exp: number;
 }
