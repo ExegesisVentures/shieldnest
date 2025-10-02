@@ -146,8 +146,8 @@ export const corsOptions = {
       if (allowed === origin) return true;
       // Support wildcard domains like *.vercel.app
       if (allowed.includes('*')) {
-        const pattern = allowed.replace('*.', '').replace(/\./g, '\\.');
-        return origin.includes(pattern);
+        const domain = allowed.replace('https://*.', '').replace('*.', '');
+        return origin.endsWith(domain);
       }
       return false;
     });
