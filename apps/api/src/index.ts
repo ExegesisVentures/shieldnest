@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { config } from '@/lib/config';
@@ -34,14 +34,20 @@ import profileRoutes from '@/routes/profile';
 import tokensRoutes from '@/routes/tokens';
 import poolsRoutes from '@/routes/pools';
 
-const app = express();
+const app: Application = express();
 
 // Validate security configuration on startup
 const securityValidation = EnvironmentValidator.validateSecurityConfig();
 if (!securityValidation.isValid) {
   console.error('❌ Security configuration validation failed:');
   securityValidation.errors.forEach(error => console.error(`  - ${error}`));
-  process.exit(1);
+  
+  // In serverless environments, throw an error instead of exiting
+  if (process.env.VERCEL === '1') {
+    throw new Error('Security configuration validation failed: ' + securityValidation.errors.join(', '));
+  } else {
+    process.exit(1);
+  }
 }
 
 // Zero Trust Security Middleware Stack
@@ -154,26 +160,34 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-const PORT = config.server.port;
+// Only start server if not in Vercel serverless environment
+// When deployed to Vercel, the export is used directly
+if (process.env.VERCEL !== '1') {
+  const PORT = config.server.port;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Roll NFT Dashboard API server running on port ${PORT}`);
+  app.listen(PORT, () => {
+    console.log(`🚀 Roll NFT Dashboard API server running on port ${PORT}`);
+    console.log(`📡 Environment: ${config.server.nodeEnv}`);
+    console.log(`🔗 Frontend URL: ${config.server.frontendUrl}`);
+    console.log(`💾 Database: Connected to Supabase`);
+    console.log(`⛓️  Chain: ${config.chainId}`);
+    console.log(`📝 Health check: http://localhost:${PORT}/health`);
+    
+    // Configuration validation warnings
+    if (config.databaseUrl.includes('localhost')) {
+      console.warn('⚠️  WARNING: Database URL points to localhost - should use Supabase!');
+    }
+    if (!config.databaseUrl.includes('cucnmhpguyynfknmxrtt.supabase.co')) {
+      console.warn('⚠️  WARNING: Database URL does not match expected Supabase project!');
+    }
+    if (config.server.frontendUrl !== 'http://localhost:3000') {
+      console.warn('⚠️  WARNING: Frontend URL does not match expected localhost:3000!');
+    }
+  });
+} else {
+  console.log('🚀 Roll NFT Dashboard API running in Vercel serverless mode');
   console.log(`📡 Environment: ${config.server.nodeEnv}`);
   console.log(`🔗 Frontend URL: ${config.server.frontendUrl}`);
-  console.log(`💾 Database: Connected to Supabase`);
-  console.log(`⛓️  Chain: ${config.chainId}`);
-  console.log(`📝 Health check: http://localhost:${PORT}/health`);
-  
-  // Configuration validation warnings
-  if (config.databaseUrl.includes('localhost')) {
-    console.warn('⚠️  WARNING: Database URL points to localhost - should use Supabase!');
-  }
-  if (!config.databaseUrl.includes('cucnmhpguyynfknmxrtt.supabase.co')) {
-    console.warn('⚠️  WARNING: Database URL does not match expected Supabase project!');
-  }
-  if (config.server.frontendUrl !== 'http://localhost:3000') {
-    console.warn('⚠️  WARNING: Frontend URL does not match expected localhost:3000!');
-  }
-});
+}
 
 export default app;

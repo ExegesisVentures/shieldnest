@@ -121,19 +121,22 @@ export const validateRequest = (req: Request, res: Response, next: NextFunction)
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      SecureLogger.logSecure('info', 'CORS allowed (no origin)', { origin: 'none' });
+      return callback(null, true);
+    }
     
     // Get frontend URL from environment variable
     const frontendUrl = process.env.FRONTEND_URL;
     
     // In production, allow all Vercel deployments + specific frontend URL
     if (process.env.NODE_ENV === 'production') {
-      // Allow all *.vercel.app domains
+      // Allow all *.vercel.app domains (for Vercel preview and production deployments)
       if (origin.endsWith('.vercel.app') || origin === frontendUrl) {
-        SecureLogger.logSecure('info', 'CORS allowed', { origin });
+        SecureLogger.logSecure('info', 'CORS allowed', { origin, frontendUrl, nodeEnv: process.env.NODE_ENV });
         return callback(null, true);
       }
-      SecureLogger.logSecure('warn', 'CORS blocked', { origin, frontendUrl });
+      SecureLogger.logSecure('warn', 'CORS blocked', { origin, frontendUrl, nodeEnv: process.env.NODE_ENV });
       return callback(new Error('Not allowed by CORS'));
     }
     
@@ -147,15 +150,19 @@ export const corsOptions = {
     ];
     
     if (devOrigins.includes(origin)) {
+      SecureLogger.logSecure('info', 'CORS allowed (dev)', { origin });
       return callback(null, true);
     }
     
-    SecureLogger.logSecure('warn', 'CORS violation', { origin });
+    SecureLogger.logSecure('warn', 'CORS violation', { origin, devOrigins });
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['X-Total-Count', 'X-Request-Id'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
   maxAge: 86400 // 24 hours
 };
 

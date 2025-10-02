@@ -70,11 +70,5 @@
         }
       ]
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://your-api-domain.vercel.app/api/:path*"
-    }
   ]
 }
