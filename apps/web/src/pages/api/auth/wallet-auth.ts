@@ -19,6 +19,12 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 
   console.log('🔐 [DEBUG] WALLET AUTH ENDPOINT HIT! - Serverless Version');
+  console.log('🔐 [DEBUG] Environment check:', {
+    nodeEnv: process.env.NODE_ENV,
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
+    hasJwtSecret: !!process.env.JWT_SECRET,
+    hasSupabaseUrl: !!process.env.SUPABASE_URL
+  });
   console.log('🔐 [DEBUG] Wallet auth endpoint called with:', {
     address: req.body.address,
     chain: req.body.chain,
@@ -210,5 +216,21 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withMiddleware(handler);
+// Wrap handler with additional error handling
+const wrappedHandler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
+  try {
+    await handler(req, res);
+  } catch (error) {
+    console.error('🔐 [ERROR] Unhandled error in wallet-auth wrapper:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error in wallet authentication',
+        debug: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+};
+
+export default withMiddleware(wrappedHandler);
 
