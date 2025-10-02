@@ -165,7 +165,7 @@ export default function Portfolio() {
     const totalCoreumEarned = earningsHistory ? parseFloat(earningsHistory.totalEarned) : 325.50;
     
     // Use NFT data if available, otherwise fallback to mock data
-    const totalRewardsEarned = nftHoldings ? parseFloat(nftHoldings.collections.rollNft.totalEarned) : 1250.00;
+    const totalRewardsEarned = nftHoldings?.collections?.rollNft?.totalEarned ? parseFloat(nftHoldings.collections.rollNft.totalEarned) : 1250.00;
     const hasNFT = nftHoldings ? nftHoldings.totalNFTs > 0 : true;
     const nftCount = nftHoldings ? nftHoldings.totalNFTs : 2;
 
@@ -524,19 +524,19 @@ export default function Portfolio() {
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Collection Value</p>
                   <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {formatUSD(nftHoldings.collections.rollNft.totalValue)}
+                    {nftHoldings?.collections?.rollNft?.totalValue ? formatUSD(nftHoldings.collections.rollNft.totalValue) : '$0.00'}
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Rewards</p>
                   <p className="text-xl font-semibold text-green-600 dark:text-green-400">
-                    {formatCoreAmount(parseFloat(nftHoldings.collections.rollNft.pendingRewards))} CORE
+                    {nftHoldings?.collections?.rollNft?.pendingRewards ? formatCoreAmount(parseFloat(nftHoldings.collections.rollNft.pendingRewards)) : '0.00'} CORE
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Earned</p>
                   <p className="text-xl font-semibold text-blue-600 dark:text-blue-400">
-                    {formatCoreAmount(parseFloat(nftHoldings.collections.rollNft.totalEarned))} CORE
+                    {nftHoldings?.collections?.rollNft?.totalEarned ? formatCoreAmount(parseFloat(nftHoldings.collections.rollNft.totalEarned)) : '0.00'} CORE
                   </p>
                 </div>
               </div>
