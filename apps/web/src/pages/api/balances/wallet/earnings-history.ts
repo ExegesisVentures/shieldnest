@@ -86,11 +86,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const earningsHistory = {
-      address,
-      totalRewards: totalRewards.toFixed(6),
-      rewardBreakdown,
-      delegationHistory,
-      lastUpdated: new Date().toISOString(),
+      walletAddress: address,
+      totalEarned: totalRewards.toFixed(6),
+      currentRewards: totalRewards.toFixed(6),
+      stakingHistory: delegationHistory.map((delegation, index) => ({
+        month: new Date(),
+        cumulativeEarned: totalRewards,
+        monthlyEarned: totalRewards / Math.max(delegationHistory.length, 1),
+        stakingBalance: parseFloat(delegation.amount)
+      })),
+      calculationMethod: 'Coreum API - Current Rewards',
+      lastUpdated: new Date(),
       note: 'Historical data is limited by Coreum API capabilities'
     };
 
