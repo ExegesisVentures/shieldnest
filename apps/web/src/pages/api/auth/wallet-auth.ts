@@ -71,17 +71,33 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     // Smart user recognition: Check for existing user association
+    console.log('🗄️ [DEBUG] Checking for existing wallet in database:', { address, chain });
     let wallet = await prisma.wallet.findFirst({
       where: { address, chain },
       include: { user: true }
+    });
+    
+    console.log('🗄️ [DEBUG] Wallet lookup result:', {
+      walletFound: !!wallet,
+      walletId: wallet?.id,
+      userId: wallet?.user?.id,
+      userEmail: wallet?.user?.email
     });
 
     // Also check if this address exists in UserWallet table (manual additions)
     let existingUserWallet = null;
     if (!wallet) {
+      console.log('🗄️ [DEBUG] Checking for existing user wallet (manual addition):', { address, chain });
       existingUserWallet = await prisma.userWallet.findFirst({
         where: { address, chain },
         include: { user: true }
+      });
+      
+      console.log('🗄️ [DEBUG] UserWallet lookup result:', {
+        userWalletFound: !!existingUserWallet,
+        userWalletId: existingUserWallet?.id,
+        userId: existingUserWallet?.user?.id,
+        userEmail: existingUserWallet?.user?.email
       });
     }
 
@@ -115,6 +131,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       console.log(`⬆️ Upgraded manual address to connected wallet for user: ${user.email}`);
     } else {
       // Create new user with wallet address as email placeholder
+      console.log('🗄️ [DEBUG] Creating new user with wallet:', { address, chain });
       user = await prisma.user.create({
         data: {
           email: `${address}@wallet.local`, // Placeholder email for wallet-only users
@@ -131,6 +148,12 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       });
       wallet = { ...user.wallets[0], user };
       
+      console.log('🗄️ [DEBUG] New user created successfully:', {
+        userId: user.id,
+        userEmail: user.email,
+        walletId: wallet.id,
+        walletAddress: wallet.address
+      });
       console.log(`🆕 New wallet-only user created: ${address}`);
     }
 

@@ -19,6 +19,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     // Get user profile
     try {
+      console.log('🗄️ [DEBUG] Fetching user profile from database:', { userId: req.user!.id });
       const user = await prisma.user.findUnique({
         where: { id: req.user!.id },
         include: {
@@ -42,6 +43,14 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             }
           }
         }
+      });
+      
+      console.log('🗄️ [DEBUG] Profile database query result:', {
+        userFound: !!user,
+        userId: user?.id,
+        userEmail: user?.email,
+        walletCount: user?.wallets?.length || 0,
+        userWalletCount: user?.userWallets?.length || 0
       });
 
       if (!user) {

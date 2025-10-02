@@ -56,12 +56,23 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     console.log(`📊 Fetching enhanced portfolio for user: ${userId}`);
 
     // Get all wallets (manual + connected)
+    console.log('🗄️ [DEBUG] Fetching user wallets from database:', { userId });
     const userWallets = await prisma.userWallet.findMany({
       where: { userId },
       orderBy: [
         { isDefault: 'desc' },
         { addedAt: 'asc' }
       ]
+    });
+    
+    console.log('🗄️ [DEBUG] User wallets query result:', {
+      walletCount: userWallets.length,
+      wallets: userWallets.map(w => ({
+        id: w.id,
+        address: w.address,
+        isDefault: w.isDefault,
+        label: w.label
+      }))
     });
 
     const allWallets: Array<{
@@ -79,8 +90,16 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }))];
 
     // Add connected wallet if exists
+    console.log('🗄️ [DEBUG] Checking for connected wallet:', { userId });
     const connectedWallet = await prisma.wallet.findFirst({
       where: { userId }
+    });
+    
+    console.log('🗄️ [DEBUG] Connected wallet query result:', {
+      connectedWalletFound: !!connectedWallet,
+      walletId: connectedWallet?.id,
+      walletAddress: connectedWallet?.address,
+      walletChain: connectedWallet?.chain
     });
 
     if (connectedWallet) {

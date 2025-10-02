@@ -25,13 +25,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Test database connection
     let dbStatus = 'unknown';
+    let dbError = null;
     try {
+      console.log('🗄️ [DEBUG] Testing database connection...');
       const { prisma } = await import('@/lib/api-shared/db');
       await prisma.$queryRaw`SELECT 1`;
       dbStatus = 'connected';
-    } catch (dbError) {
+      console.log('🗄️ [DEBUG] Database connection test successful');
+    } catch (error) {
       dbStatus = 'error';
-      console.error('Database connection test failed:', dbError);
+      dbError = error instanceof Error ? error.message : 'Unknown error';
+      console.error('🗄️ [ERROR] Database connection test failed:', error);
     }
 
     res.json({
@@ -39,7 +43,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       data: {
         status: 'healthy',
         environment: envCheck,
-        database: dbStatus,
+        database: {
+          status: dbStatus,
+          error: dbError
+        },
         timestamp: new Date().toISOString()
       }
     });

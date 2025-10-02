@@ -84,8 +84,14 @@ export const authenticate = async (
     }
     
     const decoded = SecureTokenManager.verifyJWT<JwtPayload>(token);
+    console.log('🔐 [DEBUG] JWT decoded successfully:', {
+      userId: decoded.userId,
+      walletId: decoded.walletId,
+      purpose: decoded.purpose
+    });
 
     // Get user from database
+    console.log('🗄️ [DEBUG] Fetching user from database:', { userId: decoded.userId });
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       include: {
@@ -97,6 +103,14 @@ export const authenticate = async (
           include: { tma: true }
         }
       }
+    });
+    
+    console.log('🗄️ [DEBUG] User database query result:', {
+      userFound: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      walletCount: user?.wallets?.length || 0,
+      tmaConsentCount: user?.tmaConsents?.length || 0
     });
 
     if (!user) {
