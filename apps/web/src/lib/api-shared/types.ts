@@ -3,7 +3,7 @@ import { NextApiRequest } from 'next';
 
 // Auth types
 export interface AuthenticatedRequest extends NextApiRequest {
-  user?: User;
+  user?: User & { wallets?: Wallet[] };
   wallet?: Wallet;
 }
 
