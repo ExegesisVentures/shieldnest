@@ -4,8 +4,8 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '../../../../src/lib/api-shared/db';
-import { withMiddleware } from '../../../../src/lib/api-shared/middleware';
+import { prisma } from '../../lib/api-shared/db';
+import { withMiddleware } from '../../lib/api-shared/middleware';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {

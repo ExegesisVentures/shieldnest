@@ -7,11 +7,11 @@
 
 import { NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../../../src/lib/api-shared/db';
-import { config } from '../../../src/lib/api-shared/config';
-import { supabase } from '../../../src/lib/api-shared/supabase';
-import { withMiddleware } from '../../../src/lib/api-shared/middleware';
-import { AuthenticatedRequest } from '../../../src/lib/api-shared/types';
+import { prisma } from '../../lib/api-shared/db';
+import { config } from '../../lib/api-shared/config';
+import { supabase } from '../../lib/api-shared/supabase';
+import { withMiddleware } from '../../lib/api-shared/middleware';
+import { AuthenticatedRequest } from '../../lib/api-shared/types';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

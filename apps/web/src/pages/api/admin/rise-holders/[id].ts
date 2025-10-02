@@ -4,10 +4,10 @@
  */
 
 import { NextApiResponse } from 'next';
-import { prisma } from '../../../../src/lib/api-shared/db';
-import { withAuth } from '../../../../src/lib/api-shared/middleware';
-import { requireAdmin } from '../../../../src/lib/api-shared/admin-middleware';
-import { AuthenticatedRequest } from '../../../../src/lib/api-shared/types';
+import { prisma } from '../../lib/api-shared/db';
+import { withAuth } from '../../lib/api-shared/middleware';
+import { requireAdmin } from '../../lib/api-shared/admin-middleware';
+import { AuthenticatedRequest } from '../../lib/api-shared/types';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // Check admin permission

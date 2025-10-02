@@ -4,11 +4,11 @@
  */
 
 import { NextApiResponse } from 'next';
-import { prisma } from '../../../src/lib/api-shared/db';
-import { withAuth } from '../../../src/lib/api-shared/middleware';
-import { SecureTokenManager } from '../../../src/lib/api-shared/security';
-import WalletVerifier from '../../../src/lib/api-shared/wallet';
-import { AuthenticatedRequest } from '../../../src/lib/api-shared/types';
+import { prisma } from '../../lib/api-shared/db';
+import { withAuth } from '../../lib/api-shared/middleware';
+import { SecureTokenManager } from '../../lib/api-shared/security';
+import WalletVerifier from '../../lib/api-shared/wallet';
+import { AuthenticatedRequest } from '../../lib/api-shared/types';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

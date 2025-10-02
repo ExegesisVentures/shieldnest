@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { withMiddleware } from '../../../src/lib/api-shared/middleware';
+import { withMiddleware } from '../../lib/api-shared/middleware';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {

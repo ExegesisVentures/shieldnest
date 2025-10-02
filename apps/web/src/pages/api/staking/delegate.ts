@@ -4,8 +4,8 @@
  */
 
 import { NextApiResponse } from 'next';
-import { withAuth } from '../../../src/lib/api-shared/middleware';
-import { AuthenticatedRequest } from '../../../src/lib/api-shared/types';
+import { withAuth } from '../../lib/api-shared/middleware';
+import { AuthenticatedRequest } from '../../lib/api-shared/types';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
