@@ -1,4 +1,4 @@
 {
   "version": 2,
-  "installCommand": "pnpm install --frozen-lockfile && pnpm run db:generate"
+  "installCommand": "pnpm install && pnpm run db:generate"
 }
