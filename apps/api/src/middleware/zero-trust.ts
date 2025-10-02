@@ -123,21 +123,39 @@ export const corsOptions = {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
+    // Get frontend URL from environment variable
+    const frontendUrl = process.env.FRONTEND_URL;
+    
     // Define allowed origins based on environment
     const allowedOrigins = process.env.NODE_ENV === 'production' 
       ? [
-          'https://your-production-domain.com',
-          'https://your-staging-domain.com'
-        ]
+          frontendUrl,
+          'https://*.vercel.app' // Allow all Vercel preview deployments
+        ].filter(Boolean) // Remove undefined values
       : [
           'http://localhost:3000',
-          'http://127.0.0.1:3000'
-        ];
+          'http://localhost:3003',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:3003',
+          frontendUrl
+        ].filter(Boolean);
 
-    if (allowedOrigins.includes(origin)) {
+    // Check if origin matches allowed origins (including wildcard for Vercel)
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (!allowed) return false;
+      if (allowed === origin) return true;
+      // Support wildcard domains like *.vercel.app
+      if (allowed.includes('*')) {
+        const pattern = allowed.replace('*.', '').replace(/\./g, '\\.');
+        return origin.includes(pattern);
+      }
+      return false;
+    });
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      SecureLogger.logSecure('warn', 'CORS violation', { origin });
+      SecureLogger.logSecure('warn', 'CORS violation', { origin, allowedOrigins });
       callback(new Error('Not allowed by CORS'));
     }
   },
