@@ -73,7 +73,7 @@ export default function AnonymousPortfolioView({ onProfileCreated }: AnonymousPo
       const promises = wallets.map(async (wallet) => {
         try {
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/balances/wallet?address=${encodeURIComponent(wallet.address)}`
+            `/api/balances/wallet?address=${encodeURIComponent(wallet.address)}`
           );
           
           if (response.ok) {

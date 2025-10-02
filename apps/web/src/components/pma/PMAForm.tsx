@@ -42,7 +42,7 @@ export default function PMAForm({ isOpen, onComplete, onClose }: PMAFormProps) {
   const fetchPMADocument = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/pma/current`);
+      const response = await fetch(`/api/pma/current`);
       const result = await response.json();
 
       if (result.success) {
@@ -92,7 +92,7 @@ export default function PMAForm({ isOpen, onComplete, onClose }: PMAFormProps) {
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/pma/sign`, {
+      const response = await fetch(`/api/pma/sign`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ export default function PMAForm({ isOpen, onComplete, onClose }: PMAFormProps) {
   const handleDownload = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/pma/generate-document`, {
+      const response = await fetch(`/api/pma/generate-document`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ export default function PMAForm({ isOpen, onComplete, onClose }: PMAFormProps) {
   const handleEmailCopy = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/pma/generate-document`, {
+      const response = await fetch(`/api/pma/generate-document`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

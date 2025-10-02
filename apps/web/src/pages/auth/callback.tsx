@@ -45,7 +45,7 @@ export default function AuthCallback() {
       }
 
       // Exchange Supabase session for our JWT
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/callback`, {
+      const response = await fetch(`/api/auth/callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

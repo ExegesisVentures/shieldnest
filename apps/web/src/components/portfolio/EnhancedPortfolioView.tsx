@@ -335,7 +335,7 @@ export default function EnhancedPortfolioView() {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile/portfolio-enhanced`, {
+      const response = await fetch(`/api/profile/portfolio-enhanced`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -380,7 +380,7 @@ export default function EnhancedPortfolioView() {
       const token = localStorage.getItem('auth_token');
       if (!token) return;
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile/wallets`, {
+      const response = await fetch(`/api/profile/wallets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

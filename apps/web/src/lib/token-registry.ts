@@ -162,7 +162,8 @@ export const COREUM_TOKEN_REGISTRY: TokenMetadata[] = [
 export async function getTokenMetadataAsync(denom: string): Promise<TokenMetadata> {
   try {
     // Try to fetch from API first (this uses the Supabase database)
-    const response = await fetch(`http://localhost:3001/api/tokens/${encodeURIComponent(denom)}`);
+    // Always use same domain (serverless APIs are co-located)
+    const response = await fetch(`/api/tokens/${encodeURIComponent(denom)}`);
     if (response.ok) {
       const result = await response.json();
       if (result.success && result.data) {

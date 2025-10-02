@@ -185,7 +185,7 @@ export default function Portfolio() {
       console.log(`Fetching NFT holdings for: ${connectedWallet.address}`);
       
       // Make API call to get NFT holdings
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/balances/wallet/nfts?address=${encodeURIComponent(connectedWallet.address)}`);
+      const response = await fetch(`/api/balances/wallet/nfts?address=${encodeURIComponent(connectedWallet.address)}`);
       
       if (response.ok) {
         const result = await response.json();
@@ -213,7 +213,7 @@ export default function Portfolio() {
       console.log(`Fetching Coreum earnings history for: ${connectedWallet.address}`);
       
       // Make API call to get earnings history
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/balances/wallet/earnings-history?address=${encodeURIComponent(connectedWallet.address)}`);
+      const response = await fetch(`/api/balances/wallet/earnings-history?address=${encodeURIComponent(connectedWallet.address)}`);
       
       if (response.ok) {
         const result = await response.json();

@@ -187,7 +187,7 @@ export default function AnonymousWalletManager({
 
     try {
       // API call to create profile with first wallet
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/users/create-profile`, {
+      const response = await fetch(`/api/users/create-profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

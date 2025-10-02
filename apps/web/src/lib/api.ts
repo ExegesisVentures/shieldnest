@@ -1,35 +1,43 @@
 // API configuration and utilities
 // Since we migrated to serverless, API is now part of the same deployment
-// Use same domain in production, localhost:3001 in development
+// ALWAYS use same domain for API calls (serverless functions are on same domain)
+
+/**
+ * Get the API base URL - ALWAYS returns same domain in production
+ * This is safe to use in any component/page
+ */
 const getDefaultApiUrl = () => {
-  // Server-side: only use localhost if explicitly in development
+  // Server-side: use empty string (same domain)
   if (typeof window === 'undefined') {
-    // On server, default to empty string (same domain)
     return '';
   }
-  // Client-side: ALWAYS use same domain (window.location.origin)
-  // This ensures production uses serverless APIs on same domain
+  // Client-side: ALWAYS use window.location.origin
+  // This works in both dev (localhost:3000) and production (vercel.app)
   return window.location.origin;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
+// NEVER use NEXT_PUBLIC_API_URL - it causes build-time issues
+// Instead, always use same domain (serverless APIs are co-located)
+const API_BASE_URL = getDefaultApiUrl();
 
 /**
- * Get the API base URL from environment variables
+ * Get the API base URL - ALWAYS returns same domain
  * CRITICAL: Always use this function instead of hardcoding URLs
+ * SAFE FOR PRODUCTION: No build-time environment variable checks
  */
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
+  return getDefaultApiUrl();
 }
 
 /**
  * Get the full API URL for a given endpoint
+ * SAFE FOR PRODUCTION: Always uses same domain
  */
 export function getApiUrl(endpoint: string): string {
   // Remove leading slash if present to avoid double slashes
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  // Use environment variable for API URL, or same domain in production
-  let baseUrl = process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
+  // ALWAYS use same domain (serverless APIs are co-located)
+  let baseUrl = getDefaultApiUrl();
   // Remove trailing slash from baseUrl to avoid double slashes
   baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   return `${baseUrl}/${cleanEndpoint}`;

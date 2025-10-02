@@ -228,10 +228,8 @@ export async function getCachedTokenMetadata(denom: string): Promise<TokenMetada
   // Only try API calls in browser environment
   if (typeof window !== 'undefined') {
     try {
-      // Fetch from API (use full URL to backend)
-      const apiUrl = process.env.NODE_ENV === 'development' 
-        ? `http://localhost:3001/api/tokens/${encodeURIComponent(denom)}`
-        : `/api/tokens/${encodeURIComponent(denom)}`;
+      // Fetch from API (always use same domain - serverless)
+      const apiUrl = `/api/tokens/${encodeURIComponent(denom)}`;
       
       const response = await fetch(apiUrl);
       if (response.ok) {

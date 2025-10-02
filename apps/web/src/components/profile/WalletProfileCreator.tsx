@@ -106,7 +106,7 @@ export default function WalletProfileCreator({ onProfileCreated }: WalletProfile
       }
 
       // Update user profile with the real email
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile`, {
+      const response = await fetch(`/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -123,9 +123,8 @@ export default function LiquidityPools({ walletAddress, isLoading }: LiquidityPo
     setPoolsError('');
     
     try {
-      // Fetch pool data from the API endpoint
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/pools/coreum-dex-data`);
+      // Fetch pool data from the API endpoint (same domain for serverless)
+      const response = await fetch(`/api/pools/coreum-dex-data`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch pool data: ${response.statusText}`);

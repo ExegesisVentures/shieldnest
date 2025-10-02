@@ -66,7 +66,7 @@ export default function QuickAuth({ onSuccess, onError }: QuickAuthProps) {
         const token = localStorage.getItem('auth_token');
         if (token) {
           // Test if token is still valid
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile`, {
+          const response = await fetch(`/api/profile`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'

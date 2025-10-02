@@ -68,7 +68,7 @@ export default function MultiWalletPortfolio() {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile/portfolio`, {
+      const response = await fetch(`/api/profile/portfolio`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

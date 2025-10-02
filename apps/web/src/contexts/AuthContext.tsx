@@ -100,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (token) {
         try {
           // Verify token with our API
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile`, {
+          const response = await fetch(`/api/profile`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const handleAuthCallback = async (accessToken: string, refreshToken?: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/callback`, {
+      const response = await fetch(`/api/auth/callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +189,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/email`, {
+      const response = await fetch(`/api/auth/email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/email`, {
+      const response = await fetch(`/api/auth/email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +276,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (data.user) {
         // Create user in our database
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/email`, {
+        const response = await fetch(`/api/auth/email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       
       // Use our custom password endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/password`, {
+      const response = await fetch(`/api/auth/password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -426,7 +426,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const token = localStorage.getItem('auth_token');
       if (!token) return;
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile`, {
+      const response = await fetch(`/api/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

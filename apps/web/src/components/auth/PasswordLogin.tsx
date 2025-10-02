@@ -21,7 +21,7 @@ export default function PasswordLogin({ onLoginSuccess, onSwitchToEmail }: Passw
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/password`, {
+      const response = await fetch(`/api/auth/password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
