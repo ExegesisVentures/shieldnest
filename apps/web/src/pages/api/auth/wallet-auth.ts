@@ -164,15 +164,24 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       }
     });
   } catch (error) {
+    console.error('🔐 [ERROR] Wallet authentication error:', error);
+    console.error('🔐 [ERROR] Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
+    
     SecureLogger.logSecure('error', 'Wallet authentication error', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
     });
+    
     return res.status(500).json({
       success: false,
       error: 'Failed to authenticate wallet',
       ...(config.server.nodeEnv === 'development' && { 
-        debug: error instanceof Error ? error.message : 'Unknown error' 
+        debug: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
       })
     });
   }

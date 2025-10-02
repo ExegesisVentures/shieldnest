@@ -9,6 +9,13 @@ import { withAuth } from '@/lib/api-shared/middleware';
 import { AuthenticatedRequest } from '@/lib/api-shared/types';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+  console.log('👤 [DEBUG] Profile endpoint called:', {
+    method: req.method,
+    hasUser: !!req.user,
+    userId: req.user?.id,
+    hasAuthHeader: !!req.headers.authorization
+  });
+
   if (req.method === 'GET') {
     // Get user profile
     try {
