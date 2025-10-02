@@ -64,7 +64,13 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       ]
     });
 
-    const allWallets = [...userWallets.map(w => ({
+    const allWallets: Array<{
+      address: string;
+      chain: string;
+      type: 'connected' | 'manual';
+      label: string | null;
+      isDefault: boolean;
+    }> = [...userWallets.map(w => ({
       address: w.address,
       chain: w.chain,
       type: 'manual' as const,
@@ -83,7 +89,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         allWallets.unshift({
           address: connectedWallet.address,
           chain: connectedWallet.chain,
-          type: 'connected' as const,
+          type: 'connected',
           label: 'Connected Wallet',
           isDefault: true
         });
