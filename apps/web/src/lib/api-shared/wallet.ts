@@ -1,5 +1,5 @@
-import { verifyADR36Amino } from '@cosmjs/amino';
 import { fromBech32 } from '@cosmjs/encoding';
+import { Secp256k1, Secp256k1Signature, sha256 } from '@cosmjs/crypto';
 import { SecureLogger, SecurityValidator } from './security';
 
 export interface ADR36SignDoc {
@@ -55,14 +55,15 @@ class WalletVerifier {
         }
       }
 
-      // Verify the signature
-      const isValid = await verifyADR36Amino(
-        'core', // Coreum prefix
-        address,
-        message,
-        Buffer.from(publicKey, 'base64'),
-        signatureBuffer,
-        'secp256k1'
+      // Verify the signature using direct crypto verification
+      const messageHash = sha256(Buffer.from(message, 'utf-8'));
+      const pubkeyData = Buffer.from(publicKey, 'base64');
+      const signatureData = Secp256k1Signature.fromFixedLength(signatureBuffer);
+      
+      const isValid = await Secp256k1.verifySignature(
+        signatureData,
+        messageHash,
+        pubkeyData
       );
 
       SecureLogger.logSecure('info', 'ADR-036 signature verification successful', {
