@@ -4,10 +4,10 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '../../lib/api-shared/db';
-import { config } from '../../lib/api-shared/config';
-import { supabase } from '../../lib/api-shared/supabase';
-import { withMiddleware } from '../../lib/api-shared/middleware';
+import { prisma } from '../../../../lib/api-shared/db';
+import { config } from '../../../../lib/api-shared/config';
+import { supabase } from '../../../../lib/api-shared/supabase';
+import { withMiddleware } from '../../../../lib/api-shared/middleware';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

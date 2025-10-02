@@ -4,9 +4,9 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase, supabaseAdmin } from '../../lib/api-shared/supabase';
-import { config } from '../../lib/api-shared/config';
-import { withMiddleware } from '../../lib/api-shared/middleware';
+import { supabase, supabaseAdmin } from '../../../../lib/api-shared/supabase';
+import { config } from '../../../../lib/api-shared/config';
+import { withMiddleware } from '../../../../lib/api-shared/middleware';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

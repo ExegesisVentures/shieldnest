@@ -5,10 +5,10 @@
 
 import { NextApiResponse } from 'next';
 import crypto from 'crypto';
-import { prisma } from '../../lib/api-shared/db';
-import { withAuth, requireWallet } from '../../lib/api-shared/middleware';
-import WalletVerifier from '../../lib/api-shared/wallet';
-import { AuthenticatedRequest } from '../../lib/api-shared/types';
+import { prisma } from '../../../../lib/api-shared/db';
+import { withAuth, requireWallet } from '../../../../lib/api-shared/middleware';
+import WalletVerifier from '../../../../lib/api-shared/wallet';
+import { AuthenticatedRequest } from '../../../../lib/api-shared/types';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

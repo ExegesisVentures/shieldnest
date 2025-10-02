@@ -4,9 +4,9 @@
  */
 
 import { NextApiResponse } from 'next';
-import { prisma } from '../../lib/api-shared/db';
-import { withAuth } from '../../lib/api-shared/middleware';
-import { AuthenticatedRequest } from '../../lib/api-shared/types';
+import { prisma } from '../../../../lib/api-shared/db';
+import { withAuth } from '../../../../lib/api-shared/middleware';
+import { AuthenticatedRequest } from '../../../../lib/api-shared/types';
 
 // Helper function to generate PMA document content
 function generatePMADocument(pma: any, user: any, consent: any): string {

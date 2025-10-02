@@ -5,9 +5,9 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '../../lib/api-shared/db';
-import { withMiddleware } from '../../lib/api-shared/middleware';
-import { SecureTokenManager } from '../../lib/api-shared/security';
+import { prisma } from '../../../../lib/api-shared/db';
+import { withMiddleware } from '../../../../lib/api-shared/middleware';
+import { SecureTokenManager } from '../../../../lib/api-shared/security';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
