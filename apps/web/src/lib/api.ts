@@ -27,7 +27,9 @@ export function getApiUrl(endpoint: string): string {
   // Remove leading slash if present to avoid double slashes
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   // Use environment variable for API URL, or same domain in production
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
+  let baseUrl = process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
+  // Remove trailing slash from baseUrl to avoid double slashes
+  baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   return `${baseUrl}/${cleanEndpoint}`;
 }
 
