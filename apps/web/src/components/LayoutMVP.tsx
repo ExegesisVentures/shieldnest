@@ -16,7 +16,9 @@ import {
   UserCircleIcon,
   WalletIcon,
   HomeIcon,
-  CubeTransparentIcon
+  CubeTransparentIcon,
+  Bars3Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
 
@@ -30,6 +32,7 @@ export default function LayoutMVP({ children }: LayoutProps) {
   const { isWalletModalOpen, openWalletModal, closeWalletModal } = useWalletModal();
   const { isDark } = useTheme();
   const [isUnifiedAuthModalOpen, setIsUnifiedAuthModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Pull-to-refresh handler
   const handleRefresh = async () => {
@@ -85,6 +88,18 @@ export default function LayoutMVP({ children }: LayoutProps) {
             {/* Right side actions */}
             <div className="flex items-center space-x-3">
               <ThemeToggle />
+              
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                {isMobileMenuOpen ? (
+                  <XMarkIcon className="w-6 h-6" />
+                ) : (
+                  <Bars3Icon className="w-6 h-6" />
+                )}
+              </button>
               
               {/* Authentication/Wallet Section */}
               {!isAuthenticated ? (
@@ -174,6 +189,79 @@ export default function LayoutMVP({ children }: LayoutProps) {
           </div>
         </div>
         </header>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+            <div className="px-4 pt-2 pb-3 space-y-1">
+              <Link 
+                href="/" 
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <HomeIcon className="w-5 h-5" />
+                <span>Home</span>
+              </Link>
+              
+              {isAuthenticated && (
+                <>
+                  <Link 
+                    href="/portfolio" 
+                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <WalletIcon className="w-5 h-5" />
+                    <span>Portfolio</span>
+                  </Link>
+                  
+                  <Link 
+                    href="/nft" 
+                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <CubeTransparentIcon className="w-5 h-5" />
+                    <span>NFTs</span>
+                  </Link>
+                  
+                  <Link 
+                    href="/profile" 
+                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <UserCircleIcon className="w-5 h-5" />
+                    <span>Profile</span>
+                  </Link>
+                </>
+              )}
+              
+              {!isAuthenticated && (
+                <div className="space-y-2 pt-2">
+                  <button
+                    onClick={() => {
+                      setIsUnifiedAuthModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full btn-secondary text-sm px-4 py-2"
+                  >
+                    Sign In
+                  </button>
+                  
+                  {!isConnected && (
+                    <button
+                      onClick={() => {
+                        openWalletModal();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full btn-primary text-sm px-4 py-2"
+                    >
+                      Connect Wallet
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <main className="flex-1">
