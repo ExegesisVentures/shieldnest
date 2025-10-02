@@ -7,6 +7,8 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import { config } from '@/lib/api-shared/config';
+import { withMiddleware, authenticate } from '@/lib/api-shared/middleware';
+import { AuthenticatedRequest } from '@/lib/api-shared/types';
 
 // Helper functions
 async function getCoreumPrice(): Promise<number> {
@@ -68,22 +70,37 @@ function convertMicroToCore(microAmount: string): string {
   return (parseFloat(microAmount) / 1_000_000).toFixed(6);
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest | AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
   try {
     const { address } = req.query;
+    let targetAddress = address;
 
+    // If no address provided, try to get from authenticated user
     if (!address || typeof address !== 'string') {
+      const authReq = req as AuthenticatedRequest;
+      if (authReq.user && authReq.wallet) {
+        targetAddress = authReq.wallet.address;
+        console.log('📊 Using authenticated wallet address:', targetAddress);
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: 'Address parameter is required or user must be authenticated'
+        });
+      }
+    }
+
+    if (!targetAddress || typeof targetAddress !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Address parameter is required'
+        error: 'Valid address is required'
       });
     }
 
-    console.log('📊 Fetching wallet data for:', address);
+    console.log('📊 Fetching wallet data for:', targetAddress);
 
     // Fetch all data in parallel
     const [
@@ -93,10 +110,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       unbondingData,
       corePrice
     ] = await Promise.all([
-      fetchAccountBalances(address),
-      fetchDelegations(address),
-      fetchStakingRewards(address),
-      fetchUnbondingDelegations(address),
+      fetchAccountBalances(targetAddress),
+      fetchDelegations(targetAddress),
+      fetchStakingRewards(targetAddress),
+      fetchUnbondingDelegations(targetAddress),
       getCoreumPrice()
     ]);
 
@@ -212,4 +229,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+
+// Custom middleware that allows both authenticated and unauthenticated access
+const customMiddleware = async (req: NextApiRequest, res: NextApiResponse) => {
+  // Try to authenticate, but don't fail if no auth provided
+  const authHeader = req.headers.authorization;
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    // User is trying to authenticate, run auth middleware
+    const authResult = await authenticate(req as AuthenticatedRequest, res);
+    if (authResult === false) {
+      return; // Auth failed, response already sent
+    }
+  }
+  
+  // Continue to handler (either authenticated or unauthenticated)
+  await handler(req, res);
+};
+
+export default withMiddleware(customMiddleware);
 

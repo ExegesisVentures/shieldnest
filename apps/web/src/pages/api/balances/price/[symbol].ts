@@ -6,6 +6,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
+import { withMiddleware } from '@/lib/api-shared/middleware';
 
 async function getCoreumPrice(): Promise<number> {
   try {
@@ -20,7 +21,7 @@ async function getCoreumPrice(): Promise<number> {
   }
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
@@ -64,4 +65,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+
+export default withMiddleware(handler);
 
