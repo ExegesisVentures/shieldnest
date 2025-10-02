@@ -108,7 +108,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           address,
           chain,
           verifiedAt: new Date()
-        }
+        },
+        include: { user: true }
       });
       
       console.log(`⬆️ Upgraded manual address to connected wallet for user: ${user.email}`);
@@ -128,7 +129,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         },
         include: { wallets: true }
       });
-      wallet = user.wallets[0];
+      wallet = { ...user.wallets[0], user };
       
       console.log(`🆕 New wallet-only user created: ${address}`);
     }
