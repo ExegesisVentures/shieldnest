@@ -92,7 +92,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       // Update verification timestamp
       wallet = await prisma.wallet.update({
         where: { id: wallet.id },
-        data: { verifiedAt: new Date() }
+        data: { verifiedAt: new Date() },
+        include: { user: true }
       });
       
       console.log(`🔄 Returning user reconnected: ${user.email} with wallet ${address}`);
