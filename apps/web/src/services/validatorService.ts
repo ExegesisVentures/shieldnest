@@ -17,9 +17,10 @@ export interface ValidatorInfo {
   isRecommended?: boolean;
 }
 
+// Since we migrated to serverless, API is now part of the same deployment
 const API_BASE_URL = process.env.NODE_ENV === 'development' 
   ? 'http://localhost:3001' 
-  : 'https://your-production-api.com'; // Update with your production API URL
+  : (typeof window !== 'undefined' ? window.location.origin : '');
 
 // Function to fetch validator data from Coreum blockchain via backend API
 export async function fetchValidatorData(): Promise<ValidatorInfo[]> {

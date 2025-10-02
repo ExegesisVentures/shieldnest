@@ -1,12 +1,23 @@
 // API configuration and utilities
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Since we migrated to serverless, API is now part of the same deployment
+// Use same domain in production, localhost:3001 in development
+const getDefaultApiUrl = () => {
+  // Server-side: use localhost in dev, or let it be set by env var
+  if (typeof window === 'undefined') {
+    return process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '';
+  }
+  // Client-side: use window origin in production, localhost in dev
+  return process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : window.location.origin;
+};
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
 
 /**
  * Get the API base URL from environment variables
  * CRITICAL: Always use this function instead of hardcoding URLs
  */
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  return process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
 }
 
 /**
@@ -15,8 +26,8 @@ export function getApiBaseUrl(): string {
 export function getApiUrl(endpoint: string): string {
   // Remove leading slash if present to avoid double slashes
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  // Use environment variable for API URL
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  // Use environment variable for API URL, or same domain in production
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();
   return `${baseUrl}/${cleanEndpoint}`;
 }
 
