@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
-import { withMiddleware } from '../../../../lib/api-shared/middleware';
+import { withMiddleware } from '@/lib/api-shared/middleware';
 
 interface PoolData {
   id: string;

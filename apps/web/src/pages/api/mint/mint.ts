@@ -4,10 +4,10 @@
  */
 
 import { NextApiResponse } from 'next';
-import { prisma } from '../../../../lib/api-shared/db';
-import { config } from '../../../../lib/api-shared/config';
-import { withAuth, requireWallet } from '../../../../lib/api-shared/middleware';
-import { AuthenticatedRequest } from '../../../../lib/api-shared/types';
+import { prisma } from '@/lib/api-shared/db';
+import { config } from '@/lib/api-shared/config';
+import { withAuth, requireWallet } from '@/lib/api-shared/middleware';
+import { AuthenticatedRequest } from '@/lib/api-shared/types';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

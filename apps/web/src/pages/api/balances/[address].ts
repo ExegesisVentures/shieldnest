@@ -5,8 +5,8 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
-import { withMiddleware } from '../../../../lib/api-shared/middleware';
-import { config } from '../../../../lib/api-shared/config';
+import { withMiddleware } from '@/lib/api-shared/middleware';
+import { config } from '@/lib/api-shared/config';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
