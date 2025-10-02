@@ -126,38 +126,32 @@ export const corsOptions = {
     // Get frontend URL from environment variable
     const frontendUrl = process.env.FRONTEND_URL;
     
-    // Define allowed origins based on environment
-    const allowedOrigins = process.env.NODE_ENV === 'production' 
-      ? [
-          frontendUrl,
-          'https://*.vercel.app' // Allow all Vercel preview deployments
-        ].filter(Boolean) // Remove undefined values
-      : [
-          'http://localhost:3000',
-          'http://localhost:3003',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:3003',
-          frontendUrl
-        ].filter(Boolean);
-
-    // Check if origin matches allowed origins (including wildcard for Vercel)
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (!allowed) return false;
-      if (allowed === origin) return true;
-      // Support wildcard domains like *.vercel.app
-      if (allowed.includes('*')) {
-        const domain = allowed.replace('https://*.', '').replace('*.', '');
-        return origin.endsWith(domain);
+    // In production, allow all Vercel deployments + specific frontend URL
+    if (process.env.NODE_ENV === 'production') {
+      // Allow all *.vercel.app domains
+      if (origin.endsWith('.vercel.app') || origin === frontendUrl) {
+        SecureLogger.logSecure('info', 'CORS allowed', { origin });
+        return callback(null, true);
       }
-      return false;
-    });
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      SecureLogger.logSecure('warn', 'CORS violation', { origin, allowedOrigins });
-      callback(new Error('Not allowed by CORS'));
+      SecureLogger.logSecure('warn', 'CORS blocked', { origin, frontendUrl });
+      return callback(new Error('Not allowed by CORS'));
     }
+    
+    // In development, allow localhost and frontend URL
+    const devOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3003',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3003',
+      frontendUrl
+    ];
+    
+    if (devOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    SecureLogger.logSecure('warn', 'CORS violation', { origin });
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
