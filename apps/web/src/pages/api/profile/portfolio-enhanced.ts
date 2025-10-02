@@ -8,7 +8,7 @@
 import { NextApiResponse } from 'next';
 import { prisma } from '@/lib/api-shared/db';
 import { config } from '@/lib/api-shared/config';
-import { withMiddleware, authenticate } from '@/lib/api-shared/middleware';
+import { withAuth } from '@/lib/api-shared/middleware';
 import { AuthenticatedRequest } from '@/lib/api-shared/types';
 
 // Helper functions
@@ -221,5 +221,5 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 }
 
-export default withMiddleware(authenticate(handler));
+export default withAuth(handler);
 
