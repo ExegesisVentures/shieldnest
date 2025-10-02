@@ -15,14 +15,11 @@
     }
   },
   "functions": {
-    "pages/api/**/*.ts": {
+    "src/pages/api/**/*.ts": {
       "maxDuration": 30,
       "memory": 1024
     },
-    "app/**/*.tsx": {
-      "maxDuration": 30
-    },
-    "pages/**/*.tsx": {
+    "src/pages/**/*.tsx": {
       "maxDuration": 30
     }
   },
