@@ -1,5 +1,6 @@
 {
   "version": 2,
   "installCommand": "pnpm install && pnpm run db:generate",
-  "buildCommand": "echo 'Skipping build - Vercel compiles TypeScript automatically'"
+  "buildCommand": "echo 'Skipping build - Vercel compiles TypeScript automatically'",
+  "outputDirectory": "api"
 }
