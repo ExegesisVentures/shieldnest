@@ -232,18 +232,38 @@ async function handler(req: NextApiRequest | AuthenticatedRequest, res: NextApiR
 
 // Custom middleware that allows both authenticated and unauthenticated access
 const customMiddleware = async (req: NextApiRequest, res: NextApiResponse) => {
+  console.log('🔐 [DEBUG] Custom middleware called:', {
+    hasAuthHeader: !!req.headers.authorization,
+    authHeader: req.headers.authorization ? `${req.headers.authorization.substring(0, 20)}...` : 'none',
+    method: req.method,
+    url: req.url
+  });
+
   // Try to authenticate, but don't fail if no auth provided
   const authHeader = req.headers.authorization;
   
   if (authHeader && authHeader.startsWith('Bearer ')) {
+    console.log('🔐 [DEBUG] Attempting authentication...');
     // User is trying to authenticate, run auth middleware
-    const authResult = await authenticate(req as AuthenticatedRequest, res);
-    if (authResult === false) {
-      return; // Auth failed, response already sent
+    try {
+      const authResult = await authenticate(req as AuthenticatedRequest, res);
+      console.log('🔐 [DEBUG] Authentication result:', authResult);
+      if (authResult === false) {
+        console.log('🔐 [DEBUG] Authentication failed, response sent');
+        return; // Auth failed, response already sent
+      }
+      // Auth succeeded, continue with authenticated request
+      console.log('🔐 [DEBUG] Authentication succeeded, calling handler with auth');
+      await handler(req as AuthenticatedRequest, res);
+      return;
+    } catch (authError) {
+      console.error('🔐 [ERROR] Authentication failed in custom middleware:', authError);
+      // If auth fails, try to continue without auth (for backward compatibility)
     }
   }
   
-  // Continue to handler (either authenticated or unauthenticated)
+  // Continue to handler without authentication
+  console.log('🔐 [DEBUG] Calling handler without authentication');
   await handler(req, res);
 };
 
