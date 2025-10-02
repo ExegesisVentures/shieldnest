@@ -1,3 +1,5 @@
 {
-  "version": 2
+  "version": 2,
+  "buildCommand": "pnpm run db:generate",
+  "installCommand": "cd ../.. && pnpm install"
 }
