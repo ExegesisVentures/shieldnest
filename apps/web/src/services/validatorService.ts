@@ -18,9 +18,8 @@ export interface ValidatorInfo {
 }
 
 // Since we migrated to serverless, API is now part of the same deployment
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:3001' 
-  : (typeof window !== 'undefined' ? window.location.origin : '');
+// Always use same domain - serverless APIs are on the same domain as frontend
+const API_BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 // Function to fetch validator data from Coreum blockchain via backend API
 export async function fetchValidatorData(): Promise<ValidatorInfo[]> {

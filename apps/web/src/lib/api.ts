@@ -2,12 +2,14 @@
 // Since we migrated to serverless, API is now part of the same deployment
 // Use same domain in production, localhost:3001 in development
 const getDefaultApiUrl = () => {
-  // Server-side: use localhost in dev, or let it be set by env var
+  // Server-side: only use localhost if explicitly in development
   if (typeof window === 'undefined') {
-    return process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '';
+    // On server, default to empty string (same domain)
+    return '';
   }
-  // Client-side: use window origin in production, localhost in dev
-  return process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : window.location.origin;
+  // Client-side: ALWAYS use same domain (window.location.origin)
+  // This ensures production uses serverless APIs on same domain
+  return window.location.origin;
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || getDefaultApiUrl();

@@ -2,15 +2,13 @@
   "version": 2,
   "name": "roll-nft-dashboard",
   "framework": "nextjs",
-  "buildCommand": "prisma generate && pnpm build",
+  "buildCommand": "NODE_ENV=production prisma generate && pnpm build",
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install --frozen-lockfile",
   "outputDirectory": ".next",
-  "env": {
-    "NODE_ENV": "production"
-  },
   "build": {
     "env": {
+      "NODE_ENV": "production",
       "NEXT_TELEMETRY_DISABLED": "1"
     }
   },
