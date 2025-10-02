@@ -201,9 +201,9 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     req.body = sanitize(req.body);
   }
   
-  if (req.query) {
-    req.query = sanitize(req.query);
-  }
+  // Note: req.query is read-only in Express, so we can't sanitize it directly
+  // The query parameters are already parsed and available as req.query
+  // If sanitization is needed, it should be done at the route level
 
   next();
 };

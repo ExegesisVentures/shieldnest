@@ -682,10 +682,50 @@ router.post('/connect-wallet', authenticate, async (req: AuthenticatedRequest, r
 });
 
 /**
+ * Test Supabase database connection
+ */
+router.post('/test-db', async (req, res) => {
+  try {
+    console.log('🔐 [DEBUG] Testing Supabase database connection...');
+    
+    // Test simple query to users table
+    const { data: users, error: usersError } = await supabaseAdmin
+      .from('users')
+      .select('count')
+      .limit(1);
+    
+    console.log('🔐 [DEBUG] Users query result:', { users, error: usersError?.message });
+    
+    // Test simple query to wallets table
+    const { data: wallets, error: walletsError } = await supabaseAdmin
+      .from('wallets')
+      .select('count')
+      .limit(1);
+    
+    console.log('🔐 [DEBUG] Wallets query result:', { wallets, error: walletsError?.message });
+    
+    res.json({
+      success: true,
+      message: 'Database connection test completed',
+      data: {
+        users: { hasData: !!users, error: usersError?.message },
+        wallets: { hasData: !!wallets, error: walletsError?.message }
+      }
+    });
+  } catch (error) {
+    console.error('🔐 [DEBUG] Database test error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * Wallet-only authentication - creates user if needed and returns JWT token
  */
 router.post('/wallet-auth', async (req, res) => {
-  console.log('🔐 [DEBUG] WALLET AUTH ENDPOINT HIT! - Version 2.0');
+  console.log('🔐 [DEBUG] WALLET AUTH ENDPOINT HIT! - PROPER VERSION');
   console.log('🔐 [DEBUG] Wallet auth endpoint called with:', {
     address: req.body.address,
     chain: req.body.chain,
@@ -737,65 +777,103 @@ router.post('/wallet-auth', async (req, res) => {
       });
     }
 
-    // Smart user recognition: Check for existing user association
-    let wallet = await prisma.wallet.findFirst({
-      where: { address, chain },
-      include: { user: true }
-    });
+    // Check for existing wallet first
+    console.log('🔐 [DEBUG] Checking for existing wallet...');
+    const { data: existingWallet, error: walletError } = await supabaseAdmin
+      .from('wallets')
+      .select('id, address, chain, verifiedAt, userId')
+      .eq('address', address)
+      .eq('chain', chain)
+      .single();
+    
+    console.log('🔐 [DEBUG] Wallet query result:', { existingWallet: !!existingWallet, error: walletError?.message });
 
-    // Also check if this address exists in UserWallet table (manual additions)
-    let existingUserWallet = null;
-    if (!wallet) {
-      existingUserWallet = await prisma.userWallet.findFirst({
-        where: { address, chain },
-        include: { user: true }
-      });
-    }
-
-    let user;
-    if (wallet) {
-      // Existing wallet connection
-      user = wallet.user;
-      // Update verification timestamp
-      wallet = await prisma.wallet.update({
-        where: { id: wallet.id },
-        data: { verifiedAt: new Date() }
-      });
+    let user, wallet;
+    
+    if (existingWallet && !walletError) {
+      // Existing wallet found, get the user
+      console.log('🔐 [DEBUG] Found existing wallet, fetching user...');
+      const { data: existingUser, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('id, email, name')
+        .eq('id', existingWallet.userId)
+        .single();
       
-      console.log(`🔄 Returning user reconnected: ${user.email} with wallet ${address}`);
-    } else if (existingUserWallet) {
-      // User previously added this address manually, now connecting with wallet
-      user = existingUserWallet.user;
+      if (existingUser && !userError) {
+        user = existingUser;
+        
+        // Update verification timestamp
+        const { data: updatedWallet } = await supabaseAdmin
+          .from('wallets')
+          .update({ verifiedAt: new Date().toISOString() })
+          .eq('id', existingWallet.id)
+          .select()
+          .single();
+        
+        wallet = updatedWallet;
+        console.log(`🔄 Returning user reconnected: ${user.email} with wallet ${address}`);
+      } else {
+        console.log('🔐 [DEBUG] User not found for existing wallet, creating new user...');
+        // Create new user for existing wallet
+        const { data: newUser } = await supabaseAdmin
+          .from('users')
+          .insert({
+            id: uuidv4(),
+            email: `${address}@wallet.local`,
+            name: `Wallet ${address.substring(0, 10)}...`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        user = newUser;
+        wallet = existingWallet;
+        console.log(`🆕 Created new user for existing wallet: ${address}`);
+      }
+    } else {
+      // No existing wallet, create new user and wallet
+      console.log('🔐 [DEBUG] No existing wallet found, creating new user and wallet...');
       
-      // Create verified wallet connection (upgrade from manual to connected)
-      wallet = await prisma.wallet.create({
-        data: {
+      // Create new user with explicit UUID
+      const { data: newUser, error: userError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: uuidv4(),
+          email: `${address}@wallet.local`,
+          name: `Wallet ${address.substring(0, 10)}...`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (userError || !newUser) {
+        throw new Error(`Failed to create user: ${userError?.message || 'Unknown error'}`);
+      }
+      
+      user = newUser;
+      
+      // Create wallet for the new user
+      const { data: newWallet, error: walletError2 } = await supabaseAdmin
+        .from('wallets')
+        .insert({
+          id: uuidv4(),
           userId: user.id,
           address,
           chain,
-          verifiedAt: new Date()
-        }
-      });
+          verifiedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        })
+        .select()
+        .single();
       
-      console.log(`⬆️ Upgraded manual address to connected wallet for user: ${user.email}`);
-    } else {
-      // Create new user with wallet address as email placeholder
-      user = await prisma.user.create({
-        data: {
-          email: `${address}@wallet.local`, // Placeholder email for wallet-only users
-          name: `Wallet ${address.substring(0, 10)}...`,
-          wallets: {
-            create: {
-              address,
-              chain,
-              verifiedAt: new Date()
-            }
-          }
-        },
-        include: { wallets: true }
-      });
-      wallet = user.wallets[0];
+      if (walletError2 || !newWallet) {
+        throw new Error(`Failed to create wallet: ${walletError2?.message || 'Unknown error'}`);
+      }
       
+      wallet = newWallet;
       console.log(`🆕 New wallet-only user created: ${address}`);
     }
 
