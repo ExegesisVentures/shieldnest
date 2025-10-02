@@ -1,5 +1,4 @@
 {
   "version": 2,
-  "buildCommand": "pnpm run db:generate",
-  "installCommand": "cd ../.. && pnpm install"
+  "installCommand": "pnpm install --frozen-lockfile && pnpm run db:generate"
 }
