@@ -1,84 +1,100 @@
-import React from 'react';
-import { WalletInfo } from '@/types/wallet';
+// apps/web/src/components/wallet/WalletButton.tsx
+'use client';
+
+import React, { useState } from 'react';
+import { useWallet } from '@/contexts/WalletContext';
+import { WalletConnectModal } from './WalletConnectModal';
+import { Wallet, ChevronDown } from 'lucide-react';
 
 interface WalletButtonProps {
-  wallet: WalletInfo;
-  isConnecting: boolean;
-  isSelected: boolean;
-  onConnect: (walletName: string) => void;
-  variant?: 'connect' | 'install';
+  onConnected?: (address: string) => void;
+  className?: string;
 }
 
-export default function WalletButton({ 
-  wallet, 
-  isConnecting, 
-  isSelected, 
-  onConnect, 
-  variant = 'connect' 
-}: WalletButtonProps) {
-  const handleClick = () => {
-    if (variant === 'connect') {
-      onConnect(wallet.name);
-    } else {
-      const desktopUrl = wallet.downloads?.desktop?.[0];
-      if (desktopUrl) {
-        window.open(desktopUrl, '_blank');
-      }
-    }
+/**
+ * Wallet connection button with dropdown for connected state
+ */
+export function WalletButton({ onConnected, className = '' }: WalletButtonProps) {
+  const { state, disconnect } = useWallet();
+  const [showModal, setShowModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleConnect = () => {
+    setShowModal(true);
   };
 
-  const getIcon = () => {
-    if (wallet.logo) {
-      return (
-        <img 
-          src={wallet.logo} 
-          alt={wallet.prettyName}
-          className="w-8 h-8 rounded-full"
-        />
-      );
-    }
-    
-    // Fallback to letter icon
+  const handleDisconnect = () => {
+    disconnect();
+    setShowDropdown(false);
+  };
+
+  const formatAddress = (address: string) => {
+    if (address.length <= 10) return address;
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  if (state.isConnected && state.address) {
     return (
-      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-        <span className="text-xs font-medium text-gray-600">
-          {wallet.prettyName[0]}
-        </span>
+      <div className="relative">
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className={`flex items-center space-x-2 px-4 py-2 bg-green-50 border border-green-200 text-green-800 rounded-lg hover:bg-green-100 transition-colors ${className}`}
+        >
+          <Wallet className="h-4 w-4" />
+          <span className="font-mono text-sm">{formatAddress(state.address)}</span>
+          <ChevronDown className="h-4 w-4" />
+        </button>
+
+        {showDropdown && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setShowDropdown(false)}
+            />
+            
+            {/* Dropdown */}
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+              <div className="p-4 border-b">
+                <div className="text-sm text-gray-500">Connected with</div>
+                <div className="font-medium text-gray-900 capitalize">{state.walletType}</div>
+                <div className="font-mono text-sm text-gray-600 mt-1">{state.address}</div>
+              </div>
+              
+              <div className="p-2">
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                >
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     );
-  };
-
-  const getButtonStyles = () => {
-    const baseStyles = "w-full flex items-center justify-between p-3 border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-    
-    if (variant === 'install') {
-      return `${baseStyles} border-gray-200 hover:border-gray-300 hover:bg-gray-50`;
-    }
-    
-    return `${baseStyles} border-gray-200 hover:border-primary-300 hover:bg-primary-50`;
-  };
+  }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={isConnecting && variant === 'connect'}
-      className={getButtonStyles()}
-      aria-label={variant === 'connect' ? `Connect ${wallet.prettyName}` : `Install ${wallet.prettyName}`}
-    >
-      <div className="flex items-center space-x-3">
-        {getIcon()}
-        <span className={`font-medium ${variant === 'connect' ? 'text-gray-900' : 'text-gray-700'}`}>
-          {wallet.prettyName}
-        </span>
-      </div>
-      
-      {variant === 'connect' && isConnecting && isSelected ? (
-        <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-      ) : variant === 'install' ? (
-        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-      ) : null}
-    </button>
+    <>
+      <button
+        onClick={handleConnect}
+        disabled={state.isConnecting}
+        className={`flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${className}`}
+      >
+        <Wallet className="h-4 w-4" />
+        <span>{state.isConnecting ? 'Connecting...' : 'Connect Wallet'}</span>
+      </button>
+
+      <WalletConnectModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={(address) => {
+          onConnected?.(address);
+          setShowModal(false);
+        }}
+      />
+    </>
   );
 }

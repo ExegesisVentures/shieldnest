@@ -1,0 +1,68 @@
+- rule: "Workspace map"
+  content: |
+    You are in a mono-repo with Next.js at apps/web. Keep code modular.
+    User types: Visitor (no save), Public (save), Private (PMA+Shield NFT).
+    Shield NFT is placeholder in v1: image + $5,000–$6,000 value.
+
+- rule: "Do not leak secrets"
+  content: |
+    Never put secrets in client code. Use server routes or Supabase server helpers.
+
+- rule: "Error handling"
+  content: |
+    Always return a unified error shape: { code, message, hint?, causeId }.
+    Map low-level wallet/provider errors to friendly messages.
+
+- rule: "Wallets + Auth"
+  content: |
+    Support Keplr, Leap, Cosmostation. Manual address always available.
+    Wallet-as-login = signed nonce linking to a Supabase user (email recommended).
+
+- rule: "Membership gating"
+  content: |
+    Private requires PMA (PDF stored + on-chain hash) AND Shield NFT.
+    v1: use placeholder Shield NFT value and image from admin setting.
+
+- rule: "Feature flags"
+  content: |
+    DEX trading and sell-back are coming soon. Do not expose unfinished APIs.
+
+- rule: "Contribution style"
+  content: |
+    Small PRs, strict TS, pure functions. Keep UI/connection logic separated.
+
+
+- rule: "Workspace Map"
+  content: |
+    You are inside ShieldNest, a modular Coreum dashboard.
+    Folders:
+      apps/web/src/app       -> Next.js pages/routes
+      apps/web/src/components -> UI components
+      apps/web/src/hooks      -> React hooks
+      apps/web/src/contexts   -> Context providers
+      apps/web/src/lib        -> Supabase, Coreum, NFT helpers
+      apps/web/src/utils      -> error helpers, wallet utils
+    Users:
+      Visitor -> no data saved (local only, exit-intent nudges)
+      Public  -> email/pw + wallets saved in Supabase
+      Private -> PMA signed + Shield NFT ownership; unlock member features
+
+- rule: "Feature Flags"
+  content: |
+    DEX trading and NFT sell-back are COMING SOON.
+    Do not generate APIs or UIs that assume these are live.
+
+- rule: "Error Handling"
+  content: |
+    Always return errors as { code, message, hint?, causeId }.
+    Never leak provider raw errors to users.
+
+- rule: "Security"
+  content: |
+    Never put secrets in client code. Use Supabase server helpers or env vars.
+
+- rule: "Contribution Style"
+  content: |
+    Keep functions small and typed.
+    Put UI in components/, logic in hooks/lib/utils.
+    Write friendly comments for the next developer.
