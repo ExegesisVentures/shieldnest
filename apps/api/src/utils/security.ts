@@ -9,6 +9,8 @@ import { config } from '@/lib/config';
 
 export interface SecureTokenPayload {
   userId: string;
+  walletId?: string;
+  email?: string;
   purpose: string;
   iat?: number;
   exp?: number;

@@ -10,7 +10,7 @@ import { SecureTokenManager, SecureLogger, SecurityValidator } from '@/utils/sec
 import WalletVerifier from '@/utils/wallet';
 import { AuthenticatedRequest, WalletConnectRequest, ApiResponse } from '@/types';
 
-const router = Router();
+const router: Router = Router();
 
 // Apply auth-specific security middleware to all routes
 router.use(SecurityMiddlewareFactory.getAuthMiddleware());
@@ -155,8 +155,8 @@ router.post('/password', async (req, res) => {
         email: user.email,
         purpose: 'auth'
       },
-      config.jwt.secret!,
-      { expiresIn: config.jwt.expiresIn }
+      config.auth.jwtSecret,
+      { expiresIn: '7d' }
     );
 
     res.json({
